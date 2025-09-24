@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FBS StarBoy League - Mobile Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 10px;
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header h1 {
+            color: #4a5568;
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        
+        .header p {
+            color: #718096;
+            font-size: 14px;
+        }
+        
+        .upload-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .upload-section h3 {
+            color: #4a5568;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        
+        .file-upload {
+            margin-bottom: 15px;
+        }
+        
+        .file-upload label {
+            display: block;
+            margin-bottom: 8px;
+            color: #4a5568;
+            font-weight: 500;
+        }
+        
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+        
+        .file-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px dashed #cbd5e0;
+            border-radius: 8px;
+            background: #f7fafc;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .file-input:hover {
+            border-color: #667eea;
+            background: #edf2f7;
+        }
+        
+        .file-status {
+            margin-top: 5px;
+            font-size: 12px;
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+        
+        .file-status.success {
+            background: #c6f6d5;
+            color: #276749;
+        }
+        
+        .file-status.error {
+            background: #fed7d7;
+            color: #c53030;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 10px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #48bb78;
+            color: white;
+        }
+        
+        .btn-secondary:hover:not(:disabled) {
+            background: #38a169;
+            transform: translateY(-2px);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #4a5568;
+        }
+        
+        .loading.show {
+            display: block;
+        }
+        
+        .spinner {
+            border: 3px solid #e2e8f0;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .results-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+        
+        .results-section.show {
+            display: block;
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #e2e8f0;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 12px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .tab.active {
+            background: #667eea;
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .leaderboard {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .leaderboard-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            margin-bottom: 8px;
+            background: #f7fafc;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .leaderboard-item.top3 {
+            background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);
+            color: white;
+        }
+        
+        .rank {
+            font-weight: bold;
+            min-width: 30px;
+        }
+        
+        .name {
+            flex: 1;
+            margin-left: 10px;
+            font-weight: 500;
+        }
+        
+        .points {
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .leaderboard-item.top3 .points {
+            color: white;
+        }
+        
+        .player-details {
+            font-size: 12px;
+            color: #718096;
+            margin-top: 4px;
+        }
+        
+        .scoring-info {
+            background: #e6fffa;
+            border: 1px solid #81e6d9;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .scoring-info h4 {
+            color: #234e52;
+            margin-bottom: 10px;
+        }
+        
+        .scoring-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 8px;
+            font-size: 12px;
+        }
+        
+        .scoring-item {
+            background: white;
+            padding: 8px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 5px;
+            }
+            
+            .header h1 {
+                font-size: 20px;
+            }
+            
+            .upload-section, .results-section {
+                padding: 15px;
+            }
+            
+            .btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+        }
+        
+        .download-section {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .download-btn {
+            background: #48bb78;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+        
+        .download-btn:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏆 FBS StarBoy League</h1>
+            <p>Mobile Dashboard & Score Calculator</p>
+        </div>
+        
+        <div class="scoring-info">
+            <h4>📊 Scoring System</h4>
+            <div class="scoring-grid">
+                <div class="scoring-item">
+                    <strong>NPG</strong><br>+20 pts
+                </div>
+                <div class="scoring-item">
+                    <strong>PG</strong><br>+15 pts
+                </div>
+                <div class="scoring-item">
+                    <strong>Assist</strong><br>+10 pts
+                </div>
+                <div class="scoring-item">
+                    <strong>FMP</strong><br>+5 pts
+                </div>
+                <div class="scoring-item">
+                    <strong>MOTM</strong><br>+5 pts
+                </div>
+                <div class="scoring-item">
+                    <strong>YC</strong><br>-5 pts
+                </div>
+                <div class="scoring-item">
+                    <strong>RC</strong><br>-10 pts
+                </div>
+            </div>
+        </div>
+        
+        <div class="upload-section">
+            <h3>📁 Upload Files</h3>
+            
+            <div class="file-upload">
+                <label for="statsFile">Player Stats CSV:</label>
+                <input type="file" id="statsFile" class="file-input" accept=".csv" />
+                <div id="statsStatus" class="file-status"></div>
+            </div>
+            
+            <div class="file-upload">
+                <label for="expertsFile">Experts CSV:</label>
+                <input type="file" id="expertsFile" class="file-input" accept=".csv" />
+                <div id="expertsStatus" class="file-status"></div>
+            </div>
+            
+            <div class="file-upload">
+                <label for="htmlFile">Index HTML:</label>
+                <input type="file" id="htmlFile" class="file-input" accept=".html" />
+                <div id="htmlStatus" class="file-status"></div>
+            </div>
+            
+            <button id="calculateBtn" class="btn btn-primary" disabled>
+                🚀 Calculate Scores & Update HTML
+            </button>
+        </div>
+        
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Processing files and calculating scores...</p>
+        </div>
+        
+        <div id="resultsSection" class="results-section">
+            <h3>📈 Results</h3>
+            
+            <div class="tabs">
+                <button class="tab active" data-tab="experts">Top Experts</button>
+                <button class="tab" data-tab="players">Top Players</button>
+            </div>
+            
+            <div id="expertsTab" class="tab-content active">
+                <div id="expertsLeaderboard" class="leaderboard"></div>
+            </div>
+            
+            <div id="playersTab" class="tab-content">
+                <div id="playersLeaderboard" class="leaderboard"></div>
+            </div>
+            
+            <div class="download-section">
+                <a id="downloadBtn" class="download-btn" style="display: none;">
+                    💾 Download Updated HTML
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class FBSMobileApp {
+            constructor() {
+                this.statsData = null;
+                this.expertsData = null;
+                this.htmlContent = null;
+                this.playerStats = {};
+                this.expertTotals = [];
+                
+                // Scoring system from the Python script
+                this.scoring = {
+                    'NPG': 20,    // Non-penalty goals
+                    'PG': 15,     // Penalty goals  
+                    'Assist': 10, // Assists
+                    'FMP': 5,     // Full match played (90 mins)
+                    'MOTM': 5,    // Man of the Match (POTM)
+                    'YC': -5,     // Yellow cards
+                    'RC': -10     // Red cards
+                };
+                
+                this.initializeEventListeners();
+            }
+            
+            initializeEventListeners() {
+                // File upload listeners
+                document.getElementById('statsFile').addEventListener('change', (e) => this.handleFileUpload(e, 'stats'));
+                document.getElementById('expertsFile').addEventListener('change', (e) => this.handleFileUpload(e, 'experts'));
+                document.getElementById('htmlFile').addEventListener('change', (e) => this.handleFileUpload(e, 'html'));
+                
+                // Calculate button
+                document.getElementById('calculateBtn').addEventListener('click', () => this.calculateScores());
+                
+                // Tab switching
+                document.querySelectorAll('.tab').forEach(tab => {
+                    tab.addEventListener('click', (e) => this.switchTab(e.target.dataset.tab));
+                });
+            }
+            
+            async handleFileUpload(event, type) {
+                const file = event.target.files[0];
+                if (!file) return;
+                
+                const statusElement = document.getElementById(`${type}Status`);
+                
+                try {
+                    if (type === 'html') {
+                        this.htmlContent = await this.readFileAsText(file);
+                        statusElement.textContent = `✅ ${file.name} loaded successfully`;
+                        statusElement.className = 'file-status success';
+                    } else {
+                        const csvText = await this.readFileAsText(file);
+                        const parsedData = this.parseCSV(csvText);
+                        
+                        if (type === 'stats') {
+                            this.statsData = parsedData;
+                        } else if (type === 'experts') {
+                            this.expertsData = parsedData;
+                        }
+                        
+                        statusElement.textContent = `✅ ${file.name} loaded (${parsedData.length} rows)`;
+                        statusElement.className = 'file-status success';
+                    }
+                    
+                    this.checkFilesReady();
+                    
+                } catch (error) {
+                    statusElement.textContent = `❌ Error loading ${file.name}: ${error.message}`;
+                    statusElement.className = 'file-status error';
+                }
+            }
+            
+            readFileAsText(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result);
+                    reader.onerror = (e) => reject(new Error('Failed to read file'));
+                    reader.readAsText(file);
+                });
+            }
+            
+            parseCSV(csvText) {
+                const lines = csvText.split('\n').filter(line => line.trim());
+                if (lines.length === 0) return [];
+                
+                const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+                const data = [];
+                
+                for (let i = 1; i < lines.length; i++) {
+                    const values = this.parseCSVLine(lines[i]);
+                    if (values.length === headers.length) {
+                        const row = {};
+                        headers.forEach((header, index) => {
+                            row[header] = values[index].trim().replace(/"/g, '');
+                        });
+                        data.push(row);
+                    }
+                }
+                
+                return data;
+            }
+            
+            parseCSVLine(line) {
+                const result = [];
+                let current = '';
+                let inQuotes = false;
+                
+                for (let i = 0; i < line.length; i++) {
+                    const char = line[i];
+                    
+                    if (char === '"') {
+                        inQuotes = !inQuotes;
+                    } else if (char === ',' && !inQuotes) {
+                        result.push(current);
+                        current = '';
+                    } else {
+                        current += char;
+                    }
+                }
+                
+                result.push(current);
+                return result;
+            }
+            
+            checkFilesReady() {
+                const calculateBtn = document.getElementById('calculateBtn');
+                if (this.statsData && this.expertsData && this.htmlContent) {
+                    calculateBtn.disabled = false;
+                } else {
+                    calculateBtn.disabled = true;
+                }
+            }
+            
+            calculateScores() {
+                document.getElementById('loading').classList.add('show');
+                
+                setTimeout(() => {
+                    this.calculatePlayerPoints();
+                    this.calculateExpertTotals();
+                    this.updateHTMLContent();
+                    this.displayResults();
+                    
+                    document.getElementById('loading').classList.remove('show');
+                    document.getElementById('resultsSection').classList.add('show');
+                }, 500);
+            }
+            
+            calculatePlayerPoints() {
+                this.playerStats = {};
+                
+                this.statsData.forEach(row => {
+                    const playerName = row.player_name || row['player_name'] || '';
+                    if (!playerName) return;
+                    
+                    // Get stats, handling missing values
+                    const npg = parseInt(row.npg || row.NPG || 0) || 0;
+                    const pg = parseInt(row.pg || row.PG || 0) || 0;
+                    const assists = parseInt(row.assists || row.Assists || 0) || 0;
+                    const fmp = parseInt(row.fmp || row.FMP || 0) || 0;
+                    const potm = parseInt(row.potm || row.POTM || 0) || 0;
+                    const yc = parseInt(row.yc || row.YC || 0) || 0;
+                    const rc = parseInt(row.rc || row.RC || 0) || 0;
+                    
+                    // Calculate total points
+                    const totalPoints = (
+                        npg * this.scoring.NPG +
+                        pg * this.scoring.PG +
+                        assists * this.scoring.Assist +
+                        fmp * this.scoring.FMP +
+                        potm * this.scoring.MOTM +
+                        yc * this.scoring.YC +
+                        rc * this.scoring.RC
+                    );
+                    
+                    this.playerStats[playerName] = {
+                        NPG: npg,
+                        PG: pg,
+                        Assist: assists,
+                        FMP: fmp,
+                        MOTM: potm,
+                        YC: yc,
+                        RC: rc,
+                        Total: totalPoints
+                    };
+                });
+            }
+            
+            calculateExpertTotals() {
+                this.expertTotals = [];
+                
+                this.expertsData.forEach(row => {
+                    const expertName = row.Expert || row.expert || '';
+                    if (!expertName) return;
+                    
+                    const players = [];
+                    let totalPoints = 0;
+                    
+                    // Get all 5 players for this expert
+                    for (let i = 1; i <= 5; i++) {
+                        const playerCol = `Player ${i}`;
+                        const playerName = row[playerCol] || '';
+                        
+                        if (playerName) {
+                            players.push(playerName);
+                            
+                            // Add player's points to expert total
+                            if (this.playerStats[playerName]) {
+                                totalPoints += this.playerStats[playerName].Total;
+                            }
+                        }
+                    }
+                    
+                    this.expertTotals.push({
+                        expert: expertName,
+                        players: players,
+                        totalPoints: totalPoints
+                    });
+                });
+                
+                // Sort experts by total points (descending)
+                this.expertTotals.sort((a, b) => b.totalPoints - a.totalPoints);
+            }
+            
+            updateHTMLContent() {
+                if (!this.htmlContent) return;
+                
+                // Generate new JavaScript data
+                let newJSData = this.generateJSData();
+                
+                // Find and replace the existing data in HTML
+                const pattern = /const playerStats = \{.*?\};.*?const experts = \[.*?\];/s;
+                this.updatedHTMLContent = this.htmlContent.replace(pattern, newJSData.trim());
+                
+                // Create download link
+                const blob = new Blob([this.updatedHTMLContent], { type: 'text/html' });
+                const url = URL.createObjectURL(blob);
+                const downloadBtn = document.getElementById('downloadBtn');
+                downloadBtn.href = url;
+                downloadBtn.download = 'index_updated.html';
+                downloadBtn.style.display = 'inline-block';
+            }
+            
+            generateJSData() {
+                // Player stats JavaScript object
+                let playerJS = "const playerStats = {\n";
+                Object.entries(this.playerStats).forEach(([playerName, stats]) => {
+                    const safeName = playerName.replace(/"/g, '\\"');
+                    playerJS += `        "${safeName}": {\n`;
+                    playerJS += `                "NPG": ${stats.NPG},\n`;
+                    playerJS += `                "PG": ${stats.PG},\n`;
+                    playerJS += `                "Assist": ${stats.Assist},\n`;
+                    playerJS += `                "FMP": ${stats.FMP},\n`;
+                    playerJS += `                "MOTM": ${stats.MOTM},\n`;
+                    playerJS += `                "YC": ${stats.YC},\n`;
+                    playerJS += `                "RC": ${stats.RC},\n`;
+                    playerJS += `                "Total": ${stats.Total}\n`;
+                    playerJS += `        },\n`;
+                });
+                playerJS = playerJS.slice(0, -2) + '\n};\n\n';
+                
+                // Expert totals JavaScript array
+                let expertJS = "const experts = [\n";
+                this.expertTotals.forEach(expert => {
+                    const safeExpertName = expert.expert.replace(/"/g, '\\"');
+                    const safePlayers = expert.players.map(p => p.replace(/"/g, '\\"'));
+                    expertJS += `        {\n`;
+                    expertJS += `                "expert": "${safeExpertName}",\n`;
+                    expertJS += `                "players": [\n`;
+                    safePlayers.forEach(player => {
+                        expertJS += `                        "${player}",\n`;
+                    });
+                    expertJS = expertJS.slice(0, -2) + '\n                ],\n';
+                    expertJS += `                "totalPoints": ${expert.totalPoints}\n`;
+                    expertJS += `        },\n`;
+                });
+                expertJS = expertJS.slice(0, -2) + '\n];\n';
+                
+                return playerJS + expertJS;
+            }
+            
+            displayResults() {
+                this.displayExpertsLeaderboard();
+                this.displayPlayersLeaderboard();
+            }
+            
+            displayExpertsLeaderboard() {
+                const container = document.getElementById('expertsLeaderboard');
+                container.innerHTML = '';
+                
+                this.expertTotals.forEach((expert, index) => {
+                    const item = document.createElement('div');
+                    item.className = `leaderboard-item ${index < 3 ? 'top3' : ''}`;
+                    
+                    const playersText = expert.players.join(', ');
+                    
+                    item.innerHTML = `
+                        <div class="rank">${index + 1}</div>
+                        <div class="name">
+                            ${expert.expert}
+                            <div class="player-details">${playersText}</div>
+                        </div>
+                        <div class="points">${expert.totalPoints} pts</div>
+                    `;
+                    
+                    container.appendChild(item);
+                });
+            }
+            
+            displayPlayersLeaderboard() {
+                const container = document.getElementById('playersLeaderboard');
+                container.innerHTML = '';
+                
+                const sortedPlayers = Object.entries(this.playerStats)
+                    .sort(([,a], [,b]) => b.Total - a.Total)
+                    .slice(0, 20); // Top 20 players
+                
+                sortedPlayers.forEach(([playerName, stats], index) => {
+                    const item = document.createElement('div');
+                    item.className = `leaderboard-item ${index < 3 ? 'top3' : ''}`;
+                    
+                    const detailsText = `NPG: ${stats.NPG}, PG: ${stats.PG}, A: ${stats.Assist}, FMP: ${stats.FMP}, MOTM: ${stats.MOTM}`;
+                    
+                    item.innerHTML = `
+                        <div class="rank">${index + 1}</div>
+                        <div class="name">
+                            ${playerName}
+                            <div class="player-details">${detailsText}</div>
+                        </div>
+                        <div class="points">${stats.Total} pts</div>
+                    `;
+                    
+                    container.appendChild(item);
+                });
+            }
+            
+            switchTab(tabName) {
+                document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                
+                document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+                document.getElementById(`${tabName}Tab`).classList.add('active');
+            }
+        }
+        
+        // Initialize the app when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new FBSMobileApp();
+        });
+    </script>
+</body>
+</html>
