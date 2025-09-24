@@ -420,6 +420,10 @@
                 <a id="downloadBtn" class="download-btn" style="display: none;">
                     💾 Download Updated HTML
                 </a>
+                <div id="debugInfo" style="margin-top: 15px; padding: 10px; background: #f1f5f9; border-radius: 5px; font-size: 12px; display: none;">
+                    <strong>Debug Info:</strong>
+                    <div id="debugContent"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -508,20 +512,38 @@
                 const lines = csvText.split('\n').filter(line => line.trim());
                 if (lines.length === 0) return [];
                 
-                const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+                // Clean and parse headers
+                const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, '').toLowerCase());
                 const data = [];
+                
+                console.log('CSV Headers found:', headers); // Debug log
                 
                 for (let i = 1; i < lines.length; i++) {
                     const values = this.parseCSVLine(lines[i]);
-                    if (values.length === headers.length) {
+                    if (values.length >= headers.length) {
                         const row = {};
                         headers.forEach((header, index) => {
-                            row[header] = values[index].trim().replace(/"/g, '');
+                            if (index < values.length) {
+                                // Store with original header name for compatibility
+                                const cleanValue = values[index].trim().replace(/"/g, '');
+                                row[header] = cleanValue;
+                                
+                                // Also store with exact column names from your CSV
+                                if (header === 'player_name') row['player_name'] = cleanValue;
+                                if (header === 'npg') row['npg'] = cleanValue;
+                                if (header === 'pg') row['pg'] = cleanValue;
+                                if (header === 'assists') row['assists'] = cleanValue;
+                                if (header === 'fmp') row['fmp'] = cleanValue;
+                                if (header === 'potm') row['potm'] = cleanValue;
+                                if (header === 'yc') row['yc'] = cleanValue;
+                                if (header === 'rc') row['rc'] = cleanValue;
+                            }
                         });
                         data.push(row);
                     }
                 }
                 
+                console.log('Parsed CSV data sample:', data[0]); // Debug log
                 return data;
             }
             
@@ -556,6 +578,13 @@
                 }
             }
             
+            parseNumber(value) {
+                // Helper function to safely parse numbers from CSV
+                if (value === null || value === undefined || value === '') return 0;
+                const num = parseInt(String(value).trim()) || 0;
+                return isNaN(num) ? 0 : num;
+            }
+            
             calculateScores() {
                 document.getElementById('loading').classList.add('show');
                 
@@ -573,18 +602,20 @@
             calculatePlayerPoints() {
                 this.playerStats = {};
                 
+                console.log('Stats data sample:', this.statsData[0]); // Debug log
+                
                 this.statsData.forEach(row => {
                     const playerName = row.player_name || row['player_name'] || '';
-                    if (!playerName) return;
+                    if (!playerName.trim()) return;
                     
-                    // Get stats, handling missing values
-                    const npg = parseInt(row.npg || row.NPG || 0) || 0;
-                    const pg = parseInt(row.pg || row.PG || 0) || 0;
-                    const assists = parseInt(row.assists || row.Assists || 0) || 0;
-                    const fmp = parseInt(row.fmp || row.FMP || 0) || 0;
-                    const potm = parseInt(row.potm || row.POTM || 0) || 0;
-                    const yc = parseInt(row.yc || row.YC || 0) || 0;
-                    const rc = parseInt(row.rc || row.RC || 0) || 0;
+                    // Get stats with more robust parsing, handling missing values
+                    const npg = this.parseNumber(row.npg);
+                    const pg = this.parseNumber(row.pg);
+                    const assists = this.parseNumber(row.assists);
+                    const fmp = this.parseNumber(row.fmp);
+                    const potm = this.parseNumber(row.potm); // potm = motm in your CSV
+                    const yc = this.parseNumber(row.yc);
+                    const rc = this.parseNumber(row.rc);
                     
                     // Calculate total points
                     const totalPoints = (
@@ -597,7 +628,7 @@
                         rc * this.scoring.RC
                     );
                     
-                    this.playerStats[playerName] = {
+                    this.playerStats[playerName.trim()] = {
                         NPG: npg,
                         PG: pg,
                         Assist: assists,
@@ -607,7 +638,14 @@
                         RC: rc,
                         Total: totalPoints
                     };
+                    
+                    // Debug log for first few players
+                    if (Object.keys(this.playerStats).length <= 3) {
+                        console.log(`Player: ${playerName}, NPG: ${npg}, PG: ${pg}, Assists: ${assists}, FMP: ${fmp}, POTM: ${potm}, YC: ${yc}, RC: ${rc}, Total: ${totalPoints}`);
+                    }
                 });
+                
+                console.log(`Calculated points for ${Object.keys(this.playerStats).length} players`);
             }
             
             calculateExpertTotals() {
@@ -706,6 +744,30 @@
             displayResults() {
                 this.displayExpertsLeaderboard();
                 this.displayPlayersLeaderboard();
+                this.showDebugInfo();
+            }
+            
+            showDebugInfo() {
+                const debugInfo = document.getElementById('debugInfo');
+                const debugContent = document.getElementById('debugContent');
+                
+                const totalPlayers = Object.keys(this.playerStats).length;
+                const totalExperts = this.expertTotals.length;
+                const topPlayer = Object.entries(this.playerStats)
+                    .sort(([,a], [,b]) => b.Total - a.Total)[0];
+                const topExpert = this.expertTotals[0];
+                
+                debugContent.innerHTML = `
+                    <div>Players processed: ${totalPlayers}</div>
+                    <div>Experts processed: ${totalExperts}</div>
+                    <div>Top Player: ${topPlayer ? `${topPlayer[0]} (${topPlayer[1].Total} pts)` : 'None'}</div>
+                    <div>Top Expert: ${topExpert ? `${topExpert.expert} (${topExpert.totalPoints} pts)` : 'None'}</div>
+                    <div style="margin-top: 5px; font-size: 10px; color: #666;">
+                        Check browser console (F12) for detailed calculation logs
+                    </div>
+                `;
+                
+                debugInfo.style.display = 'block';
             }
             
             displayExpertsLeaderboard() {
