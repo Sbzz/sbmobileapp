@@ -617,15 +617,15 @@
                     const yc = this.parseNumber(row.yc);
                     const rc = this.parseNumber(row.rc);
                     
-                    // Calculate total points
+                    // Calculate total points (note YC and RC are negative)
                     const totalPoints = (
-                        npg * this.scoring.NPG +
-                        pg * this.scoring.PG +
-                        assists * this.scoring.Assist +
-                        fmp * this.scoring.FMP +
-                        potm * this.scoring.MOTM +
-                        yc * this.scoring.YC +
-                        rc * this.scoring.RC
+                        (npg * this.scoring.NPG) +
+                        (pg * this.scoring.PG) +
+                        (assists * this.scoring.Assist) +
+                        (fmp * this.scoring.FMP) +
+                        (potm * this.scoring.MOTM) +
+                        (yc * this.scoring.YC) +  // YC = -5 per card
+                        (rc * this.scoring.RC)    // RC = -10 per card
                     );
                     
                     this.playerStats[playerName.trim()] = {
@@ -641,7 +641,15 @@
                     
                     // Debug log for first few players
                     if (Object.keys(this.playerStats).length <= 3) {
-                        console.log(`Player: ${playerName}, NPG: ${npg}, PG: ${pg}, Assists: ${assists}, FMP: ${fmp}, POTM: ${potm}, YC: ${yc}, RC: ${rc}, Total: ${totalPoints}`);
+                        console.log(`Player: ${playerName}`);
+                        console.log(`  NPG: ${npg} × 20 = ${npg * 20}`);
+                        console.log(`  PG: ${pg} × 15 = ${pg * 15}`);
+                        console.log(`  Assists: ${assists} × 10 = ${assists * 10}`);
+                        console.log(`  FMP: ${fmp} × 5 = ${fmp * 5}`);
+                        console.log(`  POTM: ${potm} × 5 = ${potm * 5}`);
+                        console.log(`  YC: ${yc} × (-5) = ${yc * (-5)}`);
+                        console.log(`  RC: ${rc} × (-10) = ${rc * (-10)}`);
+                        console.log(`  TOTAL: ${totalPoints}`);
                     }
                 });
                 
@@ -651,37 +659,67 @@
             calculateExpertTotals() {
                 this.expertTotals = [];
                 
+                console.log('Experts data sample:', this.expertsData[0]); // Debug log
+                console.log('Available player names:', Object.keys(this.playerStats).slice(0, 10)); // Debug log
+                
                 this.expertsData.forEach(row => {
                     const expertName = row.Expert || row.expert || '';
-                    if (!expertName) return;
+                    if (!expertName.trim()) return;
                     
                     const players = [];
                     let totalPoints = 0;
+                    let foundPlayers = 0;
+                    let missingPlayers = [];
                     
-                    // Get all 5 players for this expert
+                    // Get all 5 players for this expert - try different column name formats
                     for (let i = 1; i <= 5; i++) {
-                        const playerCol = `Player ${i}`;
-                        const playerName = row[playerCol] || '';
+                        let playerName = row[`Player ${i}`] || row[`player ${i}`] || row[`player_${i}`] || '';
                         
                         if (playerName) {
+                            playerName = playerName.trim();
                             players.push(playerName);
                             
-                            // Add player's points to expert total
+                            // Try exact match first
                             if (this.playerStats[playerName]) {
                                 totalPoints += this.playerStats[playerName].Total;
+                                foundPlayers++;
+                            } else {
+                                // Try case-insensitive match
+                                const matchingPlayer = Object.keys(this.playerStats).find(p => 
+                                    p.toLowerCase() === playerName.toLowerCase()
+                                );
+                                
+                                if (matchingPlayer) {
+                                    totalPoints += this.playerStats[matchingPlayer].Total;
+                                    foundPlayers++;
+                                } else {
+                                    missingPlayers.push(playerName);
+                                }
                             }
                         }
                     }
                     
                     this.expertTotals.push({
-                        expert: expertName,
+                        expert: expertName.trim(),
                         players: players,
-                        totalPoints: totalPoints
+                        totalPoints: totalPoints,
+                        foundPlayers: foundPlayers,
+                        missingPlayers: missingPlayers
                     });
+                    
+                    // Debug log for first few experts
+                    if (this.expertTotals.length <= 3) {
+                        console.log(`Expert: ${expertName}, Players: ${players.join(', ')}, Found: ${foundPlayers}/5, Total: ${totalPoints}`);
+                        if (missingPlayers.length > 0) {
+                            console.log(`Missing players: ${missingPlayers.join(', ')}`);
+                        }
+                    }
                 });
                 
                 // Sort experts by total points (descending)
                 this.expertTotals.sort((a, b) => b.totalPoints - a.totalPoints);
+                
+                console.log(`Calculated totals for ${this.expertTotals.length} experts`);
             }
             
             updateHTMLContent() {
@@ -779,12 +817,20 @@
                     item.className = `leaderboard-item ${index < 3 ? 'top3' : ''}`;
                     
                     const playersText = expert.players.join(', ');
+                    const foundText = expert.foundPlayers ? `${expert.foundPlayers}/5 players found` : 'No matching players';
+                    const missingText = expert.missingPlayers && expert.missingPlayers.length > 0 
+                        ? `Missing: ${expert.missingPlayers.join(', ')}` 
+                        : '';
                     
                     item.innerHTML = `
                         <div class="rank">${index + 1}</div>
                         <div class="name">
                             ${expert.expert}
                             <div class="player-details">${playersText}</div>
+                            <div class="player-details" style="color: ${expert.foundPlayers === 5 ? '#48bb78' : '#e53e3e'};">
+                                ${foundText}
+                            </div>
+                            ${missingText ? `<div class="player-details" style="color: #e53e3e; font-size: 10px;">${missingText}</div>` : ''}
                         </div>
                         <div class="points">${expert.totalPoints} pts</div>
                     `;
@@ -805,13 +851,26 @@
                     const item = document.createElement('div');
                     item.className = `leaderboard-item ${index < 3 ? 'top3' : ''}`;
                     
-                    const detailsText = `NPG: ${stats.NPG}, PG: ${stats.PG}, A: ${stats.Assist}, FMP: ${stats.FMP}, MOTM: ${stats.MOTM}`;
+                    const positiveStats = [];
+                    const negativeStats = [];
+                    
+                    if (stats.NPG > 0) positiveStats.push(`NPG: ${stats.NPG}`);
+                    if (stats.PG > 0) positiveStats.push(`PG: ${stats.PG}`);
+                    if (stats.Assist > 0) positiveStats.push(`A: ${stats.Assist}`);
+                    if (stats.FMP > 0) positiveStats.push(`FMP: ${stats.FMP}`);
+                    if (stats.MOTM > 0) positiveStats.push(`MOTM: ${stats.MOTM}`);
+                    if (stats.YC > 0) negativeStats.push(`YC: ${stats.YC}`);
+                    if (stats.RC > 0) negativeStats.push(`RC: ${stats.RC}`);
+                    
+                    const detailsText = positiveStats.join(', ');
+                    const penaltiesText = negativeStats.length > 0 ? negativeStats.join(', ') : '';
                     
                     item.innerHTML = `
                         <div class="rank">${index + 1}</div>
                         <div class="name">
                             ${playerName}
-                            <div class="player-details">${detailsText}</div>
+                            ${detailsText && `<div class="player-details">${detailsText}</div>`}
+                            ${penaltiesText && `<div class="player-details" style="color: #e53e3e;">${penaltiesText}</div>`}
                         </div>
                         <div class="points">${stats.Total} pts</div>
                     `;
