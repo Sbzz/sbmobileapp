@@ -1,0 +1,24 @@
+**Ideas for webapp
+create an interactive mobile phone compatible web app to be hosted fully on netlify free account. (can host working files on GitHub if needed). 
+
+- The webapp will be populated with names of players across the top 5 european football leagues - include Champions League, Europa League, Conference League and all other local domestic league cups e.g., the FA Cup in England, Copa Del Rey in La Liga, DFB-Pokal in Bundesliga, etc.... )
+- User to register in the webapp platform with their forum handle ONLY (must be enforceable somehow)
+- Users (called pundits) can only choose max of 5 players across 5 leagues but no more than 1 player per league.
+- Users should not be able to see other users selections
+- Players cannot change selection once the season starts - date to be set.
+- Users can change injured players for another one but cannot repick the same injured player again
+- Player stats to focus on (Non-penalty goals, Penalty goals, Assists, Man of the match and if a player played 90 mins or more. 
+- Assign points to players based on their stats using a preset formula 
+  	20 points - Non Penalty goals (NPG)
+ 	15 points - Penalty goals (PG)
+  	10 Points - Assist
+	5 Points - Man or player of the match (MOTM)
+	5 Points - if player played 90 mins or more in a single match
+	Minus 5 points - For yellow cards (YC
+	Minus 10 points - for Red Cards
+- Find an open source or ANY free stats website where stats can be automatically populated from. No manual processes
+- Assign points to players based on their stats
+- Assign total points to users based on the players selected
+- Include a leader board (top 3 for both users and players - add a star to the player, a trophy to the user) to show where the goals and points are coming from
+- Include names of players selected by user underneath their names
+- Suggest any of idea that could make this app interesting for users
